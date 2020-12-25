@@ -1,0 +1,43 @@
+version: '3.7'
+services:
+  # centos7 apache2.4.*(http2)
+  web:
+#    build: ./web
+    build: .
+#    command: [ "python3 manage.py runserver 0.0.0.0:8000" ]
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - mysql
+    volumes:
+      # Dockerfileに合わせて便宜上、ローカルの./codeを接続させる。/home/srcはセキュリティ上の理由
+      - ./code:/home/code
+      #      - ./secondopinion:/var/www/html
+      - ./web/logs:/var/log/httpd
+    #     - cert:/etc/ssl/private
+    restart: always
+    # コンテナ内でsystemctlを使うために追記
+    privileged: true
+  #    env_file: .env
+  mysql:
+#    build: ./mysql
+    image: mysql:5.7
+    volumes:
+      - ./docker/mysql/volumes:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      #      - MYSQL_DATABASE=root　便宜上以下に変更
+      - MYSQL_DATABASE=secondopinion
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+    # phpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOSTS=mysql
+      - PMA_USER=root
+      - PMA_PASSWORD=root
+    ports:
+      - 8080:80
